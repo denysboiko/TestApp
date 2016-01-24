@@ -2,19 +2,58 @@ from django.shortcuts import get_object_or_404, render
 # from django.template import RequestContext, loader
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
+from django.views import generic
+from django.utils import timezone
+
 from .models import Choice, Question, Image
 
+# def index(request):
+#     latest_question_list = Question.objects.order_by('-pub_date')[:5]
+#     # template = loader.get_template('polls/index.html')
+#     context = {
+#         'latest_question_list': latest_question_list,
+#     }
+#     # return HttpResponse(template.render(context))
+#     return render(request, 'polls/index.html', context)
 
-def detail(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'polls/detail.html', {'question': question})
 
-    #return HttpResponse("You're looking at question %s." % question_id)
+class IndexView(generic.ListView):
+    template_name = 'polls/index.html'
+    context_object_name = 'latest_question_list'
+
+    def get_queryset(self):
+        """Return the last five published questions. (not including those set to be
+        published in the future)"""
+        return Question.objects.filter(
+            pub_date__lte=timezone.now()
+        ).order_by('-pub_date')[:5]
 
 
-def results(request, question_id):
-    response = "You're looking at the results of question %s."
-    return HttpResponse(response % question_id)
+#
+# def detail(request, question_id):
+#     question = get_object_or_404(Question, pk=question_id)
+#     return render(request, 'polls/detail.html', {'question': question})
+#
+#     #return HttpResponse("You're looking at question %s." % question_id)
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
+
+
+# def results(request, question_id):
+#     response = "You're looking at the results of question %s."
+#     return HttpResponse(response % question_id)
+
+
+# def results(request, question_id):
+#     question = get_object_or_404(Question, pk=question_id)
+#     return render(request, 'polls/results.html', {'question': question})
+
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = 'polls/results.html'
 
 
 def vote(request, question_id):
@@ -36,21 +75,6 @@ def vote(request, question_id):
         return HttpResponseRedirect(reverse('polls:results', args=(p.id,)))
 
 
-def index(request):
-    latest_question_list = Question.objects.order_by('-pub_date')[:5]
-    # template = loader.get_template('polls/index.html')
-    context = {
-        'latest_question_list': latest_question_list,
-    }
-    # return HttpResponse(template.render(context))
-    return render(request, 'polls/index.html', context)
-
-
-def results(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'polls/results.html', {'question': question})
-
-
 def cover_me(request):
     covers_list = Image.objects.order_by('artist')[:5]
     # template = loader.get_template('polls/index.html')
@@ -59,3 +83,6 @@ def cover_me(request):
     }
     # return HttpResponse(template.render(context))
     return render(request, 'cover-me/index.html', context)
+
+def about(request):
+    return render(request, 'dceta/about.html')
